@@ -35,20 +35,6 @@ VideoClipObject.art = R(ART)
 @handler('/video/4tube', TITLE)
 def MainMenu():
 
-	Log('4Tube Main Menu')
-
-	# Create a dictionary of menu items
-	#mainMenuItems = OrderedDict([
-	#	('Most Viewed Today',	{'function':StartPage}),
-	#	('Categories',			{'function':BrowseCategories, title:'Categories'})
-	#])
-
-	#oc = GenerateMenu(NAME, mainMenuItems)
-
-	#oc.add(PrefsObject(
-	#	title="Preferences"
-	#))
-	
 	oc = ObjectContainer()
 	
 	oc.add(DirectoryObject(
@@ -76,8 +62,7 @@ def MainMenu():
 	
 @route('/video/4tube/start')
 def StartPage(title=L("DefaultBrowseVideosTitle"), url = "", sortOrders = ""):
-	Log('Start Page')
-	
+
 	oc = ObjectContainer(title2=title)
 	
 	page = HTML.ElementFromURL("http://www.4tube.com")
@@ -120,12 +105,9 @@ def BrowseCategories(title="Categories", url = "", sortOrders = ""):
 	page = HTML.ElementFromURL(BASE_URL)
 	
 	for categoryLink in page.xpath("//li[contains(@class, 'categories-button')]/ul/li/a"):
-		Log(HTML.StringFromElement(categoryLink))
 		
 		title = categoryLink.xpath("./@title")[0]
 		url = BASE_URL + categoryLink.xpath("./@href")[0]
-		
-		Log(title)
 		
 		oc.add(DirectoryObject(
 			key = Callback(ListVideosForCategory, title=title, url=url),
