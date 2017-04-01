@@ -1,0 +1,83 @@
+import json
+
+POTENTIAL_RESOLUTIONS =		["1080", "720", "480", "240", "180"]
+
+VIDEO_URL_REGEX =			"<meta itemprop=\"embedUrl\" content=\"([^>]+)\">"
+
+SITE_ID_REGEX = "http://www.4tube.com/embed/([0-9]+)"
+
+MOVIE_ID_REGEX = "\\}\\)\\(([0-9]{7,12}),[0-9]+,\\[([0-9,]+)\\]"
+
+def NormalizeURL(url):
+	return url
+
+def MetadataObjectForURL(url):
+	
+	page = HTML.ElementFromURL(url)
+	title = page.xpath("//title/text()")[0]
+
+	return VideoClipObject(
+		title =		title,
+		summary =		title,
+		content_rating =	'X'
+	)
+
+def MediaObjectsForURL(url):
+	
+	# The list of MediaObjects to be returned
+	mediaObjects =		[]
+	
+	html =		HTML.ElementFromURL(url)
+	htmlString =	HTML.StringFromElement(html)
+	
+	embedUrl = Regex(VIDEO_URL_REGEX).search(htmlString).group(1);
+	
+	siteId = Regex(SITE_ID_REGEX).search(embedUrl).group(1);
+	
+	jsUrl = "http://www.4tube.com/js/player/embed/"+siteId+".js?hl=en"
+	jsHtml = HTML.ElementFromURL(jsUrl)
+	jsHtmlString =	HTML.StringFromElement(jsHtml)
+	
+	Log(jsHtmlString)
+	Log(MOVIE_ID_REGEX)
+	
+	mediaParams = Regex(MOVIE_ID_REGEX).search(jsHtmlString);
+	mediaId = mediaParams.group(1)
+	resolutions = mediaParams.group(2).split(",")
+	
+	Log("MEDIAID: "+mediaId)
+
+	urlCollectionUrl = "http://tkn.4tube.com/" + mediaId + '/embeds/' + '+'.join(resolutions)
+	
+	HTTP.Headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'
+	HTTP.Headers['Referer'] = embedUrl
+	HTTP.Headers['Origin'] = 'http://www.4tube.com'
+	
+	Log("Trying to open " + urlCollectionUrl + " with HTTP")
+	
+	urlCollectionContent = HTTP.Request(urlCollectionUrl, {'x':'x'}, cacheTime=0).content
+	
+	Log(urlCollectionContent)
+	
+	urls = json.loads(urlCollectionContent)
+	
+	
+	for res in resolutions:
+		Log("Adding res "+urls[res]["token"])
+		mediaObject = MediaObject(
+			video_resolution = res,
+			container =			Container.MP4,
+			video_codec =			VideoCodec.H264,
+			audio_codec =			AudioCodec.AAC,
+			audio_channels =			2,
+			optimized_for_streaming =	True if Client.Product not in ['Plex Web'] else False,
+			parts = [
+				PartObject(
+					key = urls[res]["token"]
+				)
+			]
+		)
+
+		mediaObjects.append(mediaObject)
+	
+	return mediaObjects
