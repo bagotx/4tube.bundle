@@ -57,6 +57,11 @@ def MainMenu():
 	))
 	
 	oc.add(DirectoryObject(
+		key =	Callback(ListLatestVideos, title="Most Viewed Today"),
+		title =	"Latest Videos",
+	))
+	
+	oc.add(DirectoryObject(
 		key =	Callback(BrowseCategories, title="Categories"),
 		title =	"Categories",
 	))
@@ -73,7 +78,7 @@ def MainMenu():
 def StartPage(title=L("DefaultBrowseVideosTitle"), url = "", sortOrders = ""):
 	Log('Start Page')
 	
-	oc = ObjectContainer()
+	oc = ObjectContainer(title2=title)
 	
 	page = HTML.ElementFromURL("http://www.4tube.com")
 
@@ -192,6 +197,31 @@ def ListVideosForCategory(title="List for Category", url = "", sortOrders = ""):
 
 	oc = ObjectContainer(title2=title)
 	
+	page = HTML.ElementFromURL(url)
+
+	divs = page.xpath("//div[contains(@class, 'thumb_video')]")
+	for videodiv in divs:
+		url = "http://www.4tube.com" + videodiv.xpath('./a/@href')[0] 
+		title = videodiv.xpath('./a/@title')[0] 
+		thumbUrl = videodiv.xpath('./a/div[contains(@class, "thumb")]/img/@data-master')[0]
+		
+		oc.add(DirectoryObject(
+			key =	Callback(LaunchVideoPage, url=url, thumbUrl=thumbUrl),
+			title =	title,
+			summary =	title,
+			thumb =	thumbUrl
+		))
+
+		
+
+	return oc
+	
+@route('/video/4tube/latest/list')
+def ListLatestVideos(title="Latest Videos"):
+
+	oc = ObjectContainer(title2=title)
+	
+	url = BASE_URL + "/videos?sort=date"
 	page = HTML.ElementFromURL(url)
 
 	divs = page.xpath("//div[contains(@class, 'thumb_video')]")
