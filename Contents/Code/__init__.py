@@ -35,6 +35,20 @@ VideoClipObject.art = R(ART)
 @handler('/video/4tube', TITLE)
 def MainMenu():
 
+	Log('4Tube Main Menu')
+
+	# Create a dictionary of menu items
+	#mainMenuItems = OrderedDict([
+	#	('Most Viewed Today',	{'function':StartPage}),
+	#	('Categories',			{'function':BrowseCategories, title:'Categories'})
+	#])
+
+	#oc = GenerateMenu(NAME, mainMenuItems)
+
+	#oc.add(PrefsObject(
+	#	title="Preferences"
+	#))
+	
 	oc = ObjectContainer()
 	
 	oc.add(DirectoryObject(
@@ -57,12 +71,18 @@ def MainMenu():
 		title =	"Porn Stars",
 	))
 	
+	oc.add(DirectoryObject(
+		key =	Callback(BrowseFavorites, title="Favorites"),
+		title =	"Favorites",
+	))
+	
 
 	return oc
 	
 @route('/video/4tube/start')
 def StartPage(title=L("DefaultBrowseVideosTitle"), url = "", sortOrders = ""):
-
+	Log('Start Page')
+	
 	oc = ObjectContainer(title2=title)
 	
 	page = HTML.ElementFromURL("http://www.4tube.com")
@@ -105,9 +125,12 @@ def BrowseCategories(title="Categories", url = "", sortOrders = ""):
 	page = HTML.ElementFromURL(BASE_URL)
 	
 	for categoryLink in page.xpath("//li[contains(@class, 'categories-button')]/ul/li/a"):
+		Log(HTML.StringFromElement(categoryLink))
 		
 		title = categoryLink.xpath("./@title")[0]
 		url = BASE_URL + categoryLink.xpath("./@href")[0]
+		
+		Log(title)
 		
 		oc.add(DirectoryObject(
 			key = Callback(ListVideosForCategory, title=title, url=url),
@@ -130,6 +153,34 @@ def BrowsePornStars(title="Porn Stars", url = "", sortOrders = ""):
 		oc.add(DirectoryObject(
 			key = Callback(ListPornStarsForLetter, title=title, url=url),
 			title = letter
+		))
+	
+	
+	return oc
+	
+@route('/video/4tube/favorites')
+def BrowseFavorites(title="Favorites", url = "", sortOrders = ""):
+
+	oc = ObjectContainer(title2=title)
+	
+	page = HTML.ElementFromURL(BASE_URL)
+	
+	fav1 = {"name": "Allie Haze", "url": "allie-haze"}
+	fav2 = {"name": "Riley Reid", "url": "riley-reid"}
+	fav3 = {"name": "Rachel James", "url": "rachel-james"}
+	fav4 = {"name": "Veronica Radke", "url": "veronica-radke"}
+	fav5 = {"name": "Casi James", "url": "casi-james"}
+	fav6 = {"name": "Peachy", "url": "margarita-c-peachy"}
+	fav7 = {"name": "Stoya", "url": "stoya"}
+	fav8 = {"name": "Sativa Rose", "url": "sativa-rose"}
+	favorites = [fav1, fav2, fav3, fav4, fav5, fav6, fav7, fav8]
+	
+	for fav in favorites:
+
+		url = BASE_URL + "/pornstars/" + fav["url"]
+		oc.add(DirectoryObject(
+			key =	Callback(ListVideosForCategory, url=url),
+			title =	fav["name"],
 		))
 	
 	
