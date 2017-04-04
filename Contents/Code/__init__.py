@@ -35,20 +35,6 @@ VideoClipObject.art = R(ART)
 @handler('/video/4tube', TITLE)
 def MainMenu():
 
-	Log('4Tube Main Menu')
-
-	# Create a dictionary of menu items
-	#mainMenuItems = OrderedDict([
-	#	('Most Viewed Today',	{'function':StartPage}),
-	#	('Categories',			{'function':BrowseCategories, title:'Categories'})
-	#])
-
-	#oc = GenerateMenu(NAME, mainMenuItems)
-
-	#oc.add(PrefsObject(
-	#	title="Preferences"
-	#))
-	
 	oc = ObjectContainer()
 	
 	oc.add(DirectoryObject(
@@ -57,7 +43,7 @@ def MainMenu():
 	))
 	
 	oc.add(DirectoryObject(
-		key =	Callback(ListLatestVideos, title="Most Viewed Today"),
+		key =	Callback(ListLatestVideos, title="Latest Videos"),
 		title =	"Latest Videos",
 	))
 	
@@ -80,8 +66,7 @@ def MainMenu():
 	return oc
 	
 @route('/video/4tube/start')
-def StartPage(title=L("DefaultBrowseVideosTitle"), url = "", sortOrders = ""):
-	Log('Start Page')
+def StartPage(title=""):
 	
 	oc = ObjectContainer(title2=title)
 	
@@ -118,19 +103,16 @@ def LaunchVideoPage(title="Play", url = "", thumbUrl = ""):
 	return oc
 	
 @route('/video/4tube/categories')
-def BrowseCategories(title="Categories", url = "", sortOrders = ""):
+def BrowseCategories(title="Categories"):
 
 	oc = ObjectContainer(title2=title)
 	
 	page = HTML.ElementFromURL(BASE_URL)
 	
 	for categoryLink in page.xpath("//li[contains(@class, 'categories-button')]/ul/li/a"):
-		Log(HTML.StringFromElement(categoryLink))
 		
 		title = categoryLink.xpath("./@title")[0]
 		url = BASE_URL + categoryLink.xpath("./@href")[0]
-		
-		Log(title)
 		
 		oc.add(DirectoryObject(
 			key = Callback(ListVideosForCategory, title=title, url=url),
@@ -141,7 +123,7 @@ def BrowseCategories(title="Categories", url = "", sortOrders = ""):
 	return oc
 	
 @route('/video/4tube/pornstars')
-def BrowsePornStars(title="Porn Stars", url = "", sortOrders = ""):
+def BrowsePornStars(title="Porn Stars"):
 
 	oc = ObjectContainer(title2=title)
 	
@@ -151,7 +133,7 @@ def BrowsePornStars(title="Porn Stars", url = "", sortOrders = ""):
 
 		url = BASE_URL + "/pornstars/" + letter
 		oc.add(DirectoryObject(
-			key = Callback(ListPornStarsForLetter, title=title, url=url),
+			key = Callback(ListPornStarsForLetter, title=letter, url=url),
 			title = letter
 		))
 	
@@ -179,17 +161,17 @@ def BrowseFavorites(title="Favorites", url = "", sortOrders = ""):
 
 		url = BASE_URL + "/pornstars/" + fav["url"]
 		oc.add(DirectoryObject(
-			key =	Callback(ListVideosForCategory, url=url),
-			title =	fav["name"],
+			key =	Callback(ListVideosForCategory, title =	fav["name"], url=url),
+			title =	fav["name"]
 		))
 	
 	
 	return oc
 	
 @route('/video/4tube/pornstars/list')
-def ListPornStarsForLetter(title="List for Category", url = "", sortOrders = ""):
+def ListPornStarsForLetter(title="A", url = ""):
 
-	oc = ObjectContainer(title2=title)
+	oc = ObjectContainer(title2="Starts with "+title)
 	
 	baseUrlForLetter = url
 	page = HTML.ElementFromURL(url)
@@ -201,26 +183,28 @@ def ListPornStarsForLetter(title="List for Category", url = "", sortOrders = "")
 		thumbUrl = starlink.xpath("./div[contains(@class, 'thumb')]/img/@data-original")[0]
 		
 		oc.add(DirectoryObject(
-			key =	Callback(ListVideosForCategory, url=url),
+			key =	Callback(ListVideosForCategory, title=name, url=url),
 			title =	name,
 			thumb =	thumbUrl
 		))
 
 	pages = page.xpath("//ul[contains(@class, 'pagination')]/li/a/@data-page")
 	for pageNumber in pages:
-		page = HTML.ElementFromURL(baseUrlForLetter+"?p="+pageNumber)
+		if int(pageNumber) > 1:
+			Log(pageNumber+">1")
+			page = HTML.ElementFromURL(baseUrlForLetter+"?p="+pageNumber)
 
-		links = page.xpath("//div/a[contains(@class, 'thumb-link')]")
-		for starlink in links:
-			url = starlink.xpath('./@href')[0] 
-			name = starlink.xpath("./@title")[0] 
-			thumbUrl = starlink.xpath("./div[contains(@class, 'thumb')]/img/@data-original")[0]
-			
-			oc.add(DirectoryObject(
-				key =	Callback(ListVideosForCategory, url=url),
-				title =	name,
-				thumb =	thumbUrl
-			))
+			links = page.xpath("//div/a[contains(@class, 'thumb-link')]")
+			for starlink in links:
+				url = starlink.xpath('./@href')[0] 
+				name = starlink.xpath("./@title")[0] 
+				thumbUrl = starlink.xpath("./div[contains(@class, 'thumb')]/img/@data-original")[0]
+				
+				oc.add(DirectoryObject(
+					key =	Callback(ListVideosForCategory, title=name, url=url),
+					title =	name,
+					thumb =	thumbUrl
+				))
 		
 
 	return oc
@@ -230,7 +214,8 @@ def ListVideosForCategory(title="List for Category", url = "", sortOrders = ""):
 
 	oc = ObjectContainer(title2=title)
 	
-	page = HTML.ElementFromURL(url)
+	categoryBaseUrl = url
+	page = HTML.ElementFromURL(categoryBaseUrl)
 
 	divs = page.xpath("//div[contains(@class, 'thumb_video')]")
 	for videodiv in divs:
@@ -244,7 +229,23 @@ def ListVideosForCategory(title="List for Category", url = "", sortOrders = ""):
 			summary =	title,
 			thumb =	thumbUrl
 		))
-
+	
+	pages = page.xpath("//ul[contains(@class, 'pagination')]/li/a/@data-page")
+	for pageNumber in pages:
+		if int(pageNumber) > 1:
+			page = HTML.ElementFromURL(categoryBaseUrl+"?p="+pageNumber)
+			divs = page.xpath("//div[contains(@class, 'thumb_video')]")
+			for videodiv in divs:
+				url = "http://www.4tube.com" + videodiv.xpath('./a/@href')[0] 
+				title = videodiv.xpath('./a/@title')[0] 
+				thumbUrl = videodiv.xpath('./a/div[contains(@class, "thumb")]/img/@data-master')[0]
+				
+				oc.add(DirectoryObject(
+					key =	Callback(LaunchVideoPage, url=url, thumbUrl=thumbUrl),
+					title =	title,
+					summary =	title,
+					thumb =	thumbUrl
+				))
 		
 
 	return oc
