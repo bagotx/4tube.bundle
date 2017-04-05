@@ -6,7 +6,7 @@ VIDEO_URL_REGEX =			"<meta itemprop=\"embedUrl\" content=\"([^>]+)\">"
 
 SITE_ID_REGEX = "http://www.4tube.com/embed/([0-9]+)"
 
-MOVIE_ID_REGEX = "\\}\\)\\(([0-9]{7,12}),[0-9]+,\\[([0-9,]+)\\]"
+MOVIE_ID_REGEX = "\\}\\)\\(([0-9]{6,12}),[0-9]+,\\[([0-9,]+)\\]"
 
 def NormalizeURL(url):
 	return url
