@@ -17,9 +17,6 @@ def Start(): # Initialize the plug-in
 
 	Log('Starting 4Tube Plugin')
 
-	Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
-	Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
-
 # Setup the default attributes for the ObjectContainer
 ObjectContainer.title1 = TITLE
 ObjectContainer.view_group = 'List'
