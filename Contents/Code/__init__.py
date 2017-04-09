@@ -1,4 +1,4 @@
-from collections import OrderedDict
+import urllib
 from Common import *
 
 TITLE = '4Tube'
@@ -7,6 +7,7 @@ ART = 'art-default.jpg'
 ICON = 'icon-default.png'
 
 BASE_URL = "http://www.4tube.com"
+PAGINATION_REGEX = "//ul[contains(@class, 'pagination')]/li/a[not(contains(@class, 'btn-simple'))]/@data-page"
 
 #####################################################################
 # This (optional) function is initially called by the PMS framework to
@@ -60,6 +61,13 @@ def MainMenu():
 	oc.add(DirectoryObject(
 		key =	Callback(BrowseFavorites, title="Favorites"),
 		title =	"Favorites",
+	))
+	
+	oc.add(InputDirectoryObject(
+		key = Callback(Search),
+		title = "Search",
+		prompt = "Search for...",
+		summary = "Enter Search Terms"
 	))
 	
 
@@ -188,10 +196,9 @@ def ListPornStarsForLetter(title="A", url = ""):
 			thumb =	thumbUrl
 		))
 
-	pages = page.xpath("//ul[contains(@class, 'pagination')]/li/a/@data-page")
+	pages = page.xpath(PAGINATION_REGEX)
 	for pageNumber in pages:
 		if int(pageNumber) > 1:
-			Log(pageNumber+">1")
 			page = HTML.ElementFromURL(baseUrlForLetter+"?p="+pageNumber)
 
 			links = page.xpath("//div/a[contains(@class, 'thumb-link')]")
@@ -230,7 +237,7 @@ def ListVideosForCategory(title="List for Category", url = "", sortOrders = ""):
 			thumb =	thumbUrl
 		))
 	
-	pages = page.xpath("//ul[contains(@class, 'pagination')]/li/a/@data-page")
+	pages = page.xpath(PAGINATION_REGEX)
 	for pageNumber in pages:
 		if int(pageNumber) > 1:
 			page = HTML.ElementFromURL(categoryBaseUrl+"?p="+pageNumber)
@@ -274,3 +281,9 @@ def ListLatestVideos(title="Latest Videos"):
 		
 
 	return oc
+
+@route('/video/4tube/search')
+def Search(query):
+	params = {"q" : query}
+	url = BASE_URL + "/search?" + urllib.urlencode(params)
+	return ListVideosForCategory(title="Search Result", url=url)
