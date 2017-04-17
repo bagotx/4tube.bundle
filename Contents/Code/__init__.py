@@ -224,7 +224,7 @@ def ListVideosForCategory(title="List for Category", url = "", params = {}, sort
 	categoryBaseUrl = url
 	page = HTML.ElementFromURL(categoryBaseUrl + "?" + urllib.urlencode(params))
 
-	divs = page.xpath("//div[contains(@class, 'thumb_video')]")
+	divs = page.xpath("//div[@id='video_list_column']//div[contains(@class, 'thumb_video')]")
 	for videodiv in divs:
 		url = "http://www.4tube.com" + videodiv.xpath('./a/@href')[0] 
 		title = videodiv.xpath('./a/@title')[0] 
@@ -242,7 +242,7 @@ def ListVideosForCategory(title="List for Category", url = "", params = {}, sort
 		if int(pageNumber) > 1:
 			params["p"] = pageNumber
 			page = HTML.ElementFromURL(categoryBaseUrl+ "?" + urllib.urlencode(params))
-			divs = page.xpath("//div[contains(@class, 'thumb_video')]")
+			divs = page.xpath("//div[@id='video_list_column']//div[contains(@class, 'thumb_video')]")
 			for videodiv in divs:
 				url = "http://www.4tube.com" + videodiv.xpath('./a/@href')[0] 
 				title = videodiv.xpath('./a/@title')[0] 
