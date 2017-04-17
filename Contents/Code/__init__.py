@@ -217,12 +217,12 @@ def ListPornStarsForLetter(title="A", url = ""):
 	return oc
 	
 @route('/video/4tube/categories/list')
-def ListVideosForCategory(title="List for Category", url = "", sortOrders = ""):
+def ListVideosForCategory(title="List for Category", url = "", params = {}, sortOrders = ""):
 
 	oc = ObjectContainer(title2=title)
 	
 	categoryBaseUrl = url
-	page = HTML.ElementFromURL(categoryBaseUrl)
+	page = HTML.ElementFromURL(categoryBaseUrl + "?" + urllib.urlencode(params))
 
 	divs = page.xpath("//div[contains(@class, 'thumb_video')]")
 	for videodiv in divs:
@@ -240,7 +240,8 @@ def ListVideosForCategory(title="List for Category", url = "", sortOrders = ""):
 	pages = page.xpath(PAGINATION_REGEX)
 	for pageNumber in pages:
 		if int(pageNumber) > 1:
-			page = HTML.ElementFromURL(categoryBaseUrl+"?p="+pageNumber)
+			params["p"] = pageNumber
+			page = HTML.ElementFromURL(categoryBaseUrl+ "?" + urllib.urlencode(params))
 			divs = page.xpath("//div[contains(@class, 'thumb_video')]")
 			for videodiv in divs:
 				url = "http://www.4tube.com" + videodiv.xpath('./a/@href')[0] 
@@ -285,5 +286,5 @@ def ListLatestVideos(title="Latest Videos"):
 @route('/video/4tube/search')
 def Search(query):
 	params = {"q" : query}
-	url = BASE_URL + "/search?" + urllib.urlencode(params)
-	return ListVideosForCategory(title="Search Result", url=url)
+	url = BASE_URL + "/search" 
+	return ListVideosForCategory(title="Search Result", url=url, params=params)
