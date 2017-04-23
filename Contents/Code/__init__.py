@@ -105,7 +105,7 @@ def LaunchVideoPage(title="Play", url = "", thumbUrl = ""):
 		url = url,
 		thumb = thumbUrl,
 		title = title,
-		summary = 'summary'
+		summary = title
 	))
 		
 	return oc
@@ -260,28 +260,9 @@ def ListVideosForCategory(title="List for Category", url = "", params = {}, sort
 	
 @route('/video/4tube/latest/list')
 def ListLatestVideos(title="Latest Videos"):
-
-	oc = ObjectContainer(title2=title)
+	url = BASE_URL + "/videos"
+	return ListVideosForCategory(title=title, url=url, params={'sort':'date'})
 	
-	url = BASE_URL + "/videos?sort=date"
-	page = HTML.ElementFromURL(url)
-
-	divs = page.xpath("//div[contains(@class, 'thumb_video')]")
-	for videodiv in divs:
-		url = "http://www.4tube.com" + videodiv.xpath('./a/@href')[0] 
-		title = videodiv.xpath('./a/@title')[0] 
-		thumbUrl = videodiv.xpath('./a/div[contains(@class, "thumb")]/img/@data-master')[0]
-		
-		oc.add(DirectoryObject(
-			key =	Callback(LaunchVideoPage, url=url, thumbUrl=thumbUrl),
-			title =	title,
-			summary =	title,
-			thumb =	thumbUrl
-		))
-
-		
-
-	return oc
 
 @route('/video/4tube/search')
 def Search(query):
