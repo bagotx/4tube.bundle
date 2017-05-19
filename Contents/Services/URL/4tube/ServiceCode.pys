@@ -4,9 +4,11 @@ POTENTIAL_RESOLUTIONS =		["1080", "720", "480", "240", "180"]
 
 VIDEO_URL_REGEX =			"<meta itemprop=\"embedUrl\" content=\"([^>]+)\">"
 
-SITE_ID_REGEX = "http://www.4tube.com/embed/([0-9]+)"
+SITE_ID_REGEX = "https?://www.4tube.com/embed/([0-9]+)"
 
 MOVIE_ID_REGEX = "\\}\\)\\(([0-9]{6,12}),[0-9]+,\\[([0-9,]+)\\]"
+
+BASE_URL_COLLECTION_REGEX = "var url='([^']*)'"
 
 def NormalizeURL(url):
 	return url
@@ -32,22 +34,27 @@ def MediaObjectsForURL(url):
 	
 	embedUrl = Regex(VIDEO_URL_REGEX).search(htmlString).group(1);
 	
+	Log("embedUrl: "+embedUrl)
+	
 	siteId = Regex(SITE_ID_REGEX).search(embedUrl).group(1);
 	
 	jsUrl = "http://www.4tube.com/js/player/embed/"+siteId+".js?hl=en"
 	jsHtml = HTML.ElementFromURL(jsUrl)
 	jsHtmlString =	HTML.StringFromElement(jsHtml)
 	
-	Log(jsHtmlString)
-	Log(MOVIE_ID_REGEX)
+	#Log(jsHtmlString)
 	
 	mediaParams = Regex(MOVIE_ID_REGEX).search(jsHtmlString);
 	mediaId = mediaParams.group(1)
 	resolutions = mediaParams.group(2).split(",")
 	
 	Log("MEDIAID: "+mediaId)
+	
+	baseUrlForCollection = Regex(BASE_URL_COLLECTION_REGEX).search(jsHtmlString).group(1);
 
-	urlCollectionUrl = "http://tkn.4tube.com/" + mediaId + '/embeds/' + '+'.join(resolutions)
+	Log("BASE_URL_COLLECTION: "+baseUrlForCollection)
+	
+	urlCollectionUrl = baseUrlForCollection + mediaId + '/embeds/' + '+'.join(resolutions)
 	
 	HTTP.Headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'
 	HTTP.Headers['Referer'] = embedUrl
